@@ -7,9 +7,7 @@ body {
     width: 50%;
     margin-top: 100px;
     margin-left: 25%;
-
     position: relative;
-    overflow: hidden;
     text-align: center;
     border: solid 1px #eee;
     border-radius: 4px;
@@ -99,12 +97,14 @@ body {
       .controls_left {
         display: flex;
         align-items: center;
+        margin-right: 14px;
       }
   
       .controls_right {
         display: flex;
         z-index: 999;
         align-items: center;
+        margin-left: 14px;
         > * {
           cursor: pointer;
         }
@@ -322,11 +322,9 @@ body {
   
   
   .audio_player.showControls {
-    .controls div:not(:last-child) {
-      margin-right: 14px;
-    }
     .progress_bar .current_dot {
       opacity: 1 !important;
+      // pointer-events: none; // 禁止触发鼠标事件
     }
     .hover_cls.progress_bar {
       height: 8px;

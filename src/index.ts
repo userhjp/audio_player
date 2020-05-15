@@ -3,7 +3,7 @@ import WaveSurfer from 'wavesurfer.js';
 import $ from './dom';
 
 interface Config {
-  /** 视频加载是否自动播放 */
+  /** 音频加载是否自动播放 */
   autoplay?: boolean;
   /** 播放地址 */
   src?: string;
@@ -20,12 +20,12 @@ interface Config {
 class AudioPlayer {
    private audioPlayer: any; // 播放器
    private config: Config = {
-      autoplay: false, // 视频加载是否自动播放
+      autoplay: false, // 音频加载是否自动播放
       autoHideControls: true, // 自动隐藏控制条
       isFastForward: true, // 是否允许快进
     }
-    private isMove = false; // 进度条是否拖动中，防止拖动时候视频正常播放更新进度条
-    private currentvolum = 1; // 当前视频播放音量 0 - 1
+    private isMove = false; // 进度条是否拖动中，防止拖动时候音频正常播放更新进度条
+    private currentvolum = 1; // 当前音频播放音量 0 - 1
 
     // 开始加载 | 加载完成 | 播放中 | 暂停中 | 缓冲中 | 缓冲就绪 | 播放完毕 | 错误
 
@@ -53,12 +53,20 @@ class AudioPlayer {
     }
 
 
-    // /** 重新加载视频 */
+    // /** 重新加载音频 */
     // reload = () => this.playerElement.load();
     
-    // /** 开始、暂停播放 */
-    play() {
+    /** 开始、暂停播放 */
+    play(time?: number) {
       this.audioPlayer.playPause()
+    }
+
+    /**
+     * 设置播放进度
+     * @param time
+     */
+    setPlayTime(time: number) {
+      this.audioPlayer.play(time);
     }
     
     /** 设置倍速 */
@@ -74,10 +82,10 @@ class AudioPlayer {
       /*设置左右宽度比例*/
       $('#volumeslider').setStyle('backgroundSize', `${value * 100}% 100%`)
       const volume_bth = $('#volume_img');
-      if(value) {
-        volume_bth.addClass('mute');
-      } else {
+      if(value > 0) {
         volume_bth.removeClass('mute');
+      } else {
+        volume_bth.addClass('mute');
       }
     }
     
@@ -97,7 +105,7 @@ class AudioPlayer {
         case 'ready':
         case 'pause':
           $('.play_btn').removeClass('suspend');
-          $('#v_play').setStyle('display', 'block');
+          // $('#v_play').setStyle('display', 'block');
           break;
         case 'loading':
          $('.v_loading').setStyle('display', 'block');
@@ -121,10 +129,10 @@ class AudioPlayer {
       return currentTime;
     }
     
-    /** 视频当前播放进度/进度条样式 */
+    /** 音频当前播放进度/进度条样式 */
     setDuration(position: number) {
       const currentTime = this.getCurrentLocationTime(position);
-      const duration = this.formatSeconds(this.audioPlayer.getDuration()); // 视频总长度- 分:秒
+      const duration = this.formatSeconds(this.audioPlayer.getDuration()); // 音频总长度- 分:秒
       $('.time').html(`${currentTime} / ${duration}`);
       $('.current_progress').setStyle('width', `${position}px`);
       $('.current_dot').setStyle('left', `${position}px`);
@@ -151,8 +159,8 @@ class AudioPlayer {
       
       // 倍速列表点击事件
       $('#speed_con div').on('click', (e) => {
-        e.currentTarget.className.remove("on");
-        e.target.classList.add("on");
+        $('#speed_con div').removeClass('on');
+        $(e.target).addClass('on');
         const val = `${parseFloat(e.target.innerText)}`;
         this.setPlaybackRate(val);
       })
@@ -170,15 +178,15 @@ class AudioPlayer {
         }
       }
 
-      // 改变label位置
+      // 改变时间label位置
       const showmoveLabel = (clientX) => {
         if(clientX < 0) clientX = 0;
         const datelabel = $('.date_label');
         datelabel.text(this.getCurrentLocationTime(clientX));
         const minLeft = datelabel.eq().clientWidth / 2;
-        const maxLeft = datelabel.eq().clientWidth - minLeft;
+        const maxRight = $('#progress').eq().clientWidth - minLeft;
         if(clientX < minLeft) clientX = minLeft; // 防止被遮掩
-        if(clientX > maxLeft) clientX = maxLeft; 
+        if(clientX > maxRight) clientX = maxRight; 
         datelabel.setStyle('left', clientX + 'px');
         datelabel.setStyle('visibility', 'visible');
       }
@@ -225,8 +233,10 @@ class AudioPlayer {
             // 拖动完成更新播放器时间
             const touch2 = isPc ? e : e.changedTouches[0];
             const position = getPosition(touch2);
-            // 更新视频实际播放时间
-            this.audioPlayer.currentTime = position / maxWidth * this.audioPlayer.duration;
+            // 更新音频实际播放时间
+            const currentTime = position / maxWidth * this.audioPlayer.getDuration();
+           
+            this.setPlayTime(currentTime);
             this.isMove = false;
             if(!isPc) { // 这里处理移动端进度条变化
               progressHover(false);
@@ -257,7 +267,11 @@ class AudioPlayer {
             hidemoveLabel();
         });
         // 鼠标移动
-        $('#progress').on('mousemove', (e) => showmoveLabel(e.offsetX));
+        $('#progress').on('mousemove', (e) => {
+          // layerX 鼠标相对于当前焦点元素可视区偏移位置  offsetLeft 当前元素偏移
+          showmoveLabel(e.target.tagName === 'I' ? e.target.offsetLeft + e.layerX : e.layerX);
+        });
+        $('.current_dot').eq().onmousedown = (event) => event.stopPropagation();
       } else {
         $('#audio_container').on('ontouchstart', onmouseover);
       }
@@ -277,44 +291,48 @@ class AudioPlayer {
 
     
       // 阻止事件冒泡到点击进度条
-      $('.current_dot').on('onmousedown', (event) => event.stopPropagation());
+      $('.current_dot').eq().onmousedown = (event) => event.stopPropagation();
     
       // 鼠标点击的时候，跳转进度
-      $('#progress').on('click', (event) => {
+      $('#progress').eq().onmousedown = (event) => {
         if(!this.config.isFastForward) return;
         const maxWidth = this.getProgressWidth();
         let layerX = event.layerX;
         if (layerX > maxWidth) { layerX = maxWidth; }
         const duration = this.audioPlayer.getDuration();
-        const currentTime = layerX / maxWidth * duration; // 计算出点击的位置在总时间里面占多少。
-        debugger
-        this.audioPlayer.setPlayEnd(currentTime);
+        let currentTime = layerX / maxWidth * duration; // 计算出点击的位置在总时间里面占多少。
+        if(currentTime < 0) currentTime = 0;
+        this.setPlayTime(currentTime);
         this.setDuration(layerX);
-      })
+      }
     
       // 音量拖动事件
-      $('#volumeslider').on('oninput', (e) => {
+      $('#volumeslider').eq().oninput = (e) => {
         e.stopPropagation();
         const value = e.target.value;
         this.currentvolum = value;
         this.setVolum(value);
-      })
+      };
       
       // 音频播放时连续发射,搜寻时也会触发
       this.audioPlayer.on('audioprocess', (e) => {
-
+        if (!this.isMove) {
+          const duration = this.audioPlayer.getDuration();
+          const maxWidth = this.getProgressWidth();
+          this.setDuration(e / duration * maxWidth);
+        }
       });
     
-      // ready：可播放监听。当浏览器能够开始播放指定的音频/视频时触发
+      // ready：可播放监听。当浏览器能够开始播放指定的音频/音频时触发
       this.audioPlayer.on('ready', (e) => {
         const maxWidth = this.getProgressWidth();
         this.setDuration(this.audioPlayer.getCurrentTime()/ this.audioPlayer.getDuration() * maxWidth);
         this.setState('ready');
       })
       
-      // readythrough：可流畅播放。当浏览器预计能够在不停下来进行缓冲的情况下持续播放指定的音频/视频时触发
+      // readythrough：可流畅播放。当浏览器预计能够在不停下来进行缓冲的情况下持续播放指定的音频/音频时触发
       // video.addEventListener('readythrough', (e) => {
-      //   console.log('提示视频能够不停顿地一直播放');
+      //   console.log('提示音频能够不停顿地一直播放');
       // });
     
       // play：播放监听
@@ -384,7 +402,6 @@ class AudioPlayer {
         <div class="controls" id="audio_controls">
             <div class="controls_left">
                 <i class="button_img play play_btn"></i>
-                <div class="time"></div>
             </div>
             <div id="progress" class="progress_bar">
                 <div class="current_progress"></div>
@@ -393,6 +410,7 @@ class AudioPlayer {
                 <span class="date_label">00:00</span>
             </div>
             <div class="controls_right">
+                <div class="time"></div>
                 <!-- 音量 -->
                 <div class="volume_bth">
                     <div class="volume_con">
@@ -440,7 +458,6 @@ class AudioPlayer {
                 </div>
             </div>
         </div>
-
         <div id="_audio_player" width="100%"></div>
     </div>
     `
