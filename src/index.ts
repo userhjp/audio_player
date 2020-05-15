@@ -168,25 +168,25 @@ class AudioPlayer {
       // 播放按钮点击
       $('.play_btn').on('click', (e) => this.play());
 
-      // 进度条变粗大 这里区分了移动端和pc端所以不能直接写样式
-      const progressHover = (isHover: boolean) => {
-        if(!this.config.isFastForward) return;
-        if(isHover) {
-            $('#progress').addClass('hover_cls');
-        } else {
-            $('#progress').removeClass('hover_cls');
-        }
-      }
+      // 进度条变粗大 这里区分了移动端和pc端事件
+      // const progressHover = (isHover: boolean) => {
+      //   if(!this.config.isFastForward) return;
+      //   if(isHover) {
+      //       $('#progress').addClass('hover_cls');
+      //   } else {
+      //       $('#progress').removeClass('hover_cls');
+      //   }
+      // }
 
       // 改变时间label位置
       const showmoveLabel = (clientX) => {
         if(clientX < 0) clientX = 0;
         const datelabel = $('.date_label');
         datelabel.text(this.getCurrentLocationTime(clientX));
-        const minLeft = datelabel.eq().clientWidth / 2;
-        const maxRight = $('#progress').eq().clientWidth - minLeft;
-        if(clientX < minLeft) clientX = minLeft; // 防止被遮掩
-        if(clientX > maxRight) clientX = maxRight; 
+        // const minLeft = datelabel.eq().clientWidth / 2;
+        // const maxRight = $('#progress').eq().clientWidth;
+        // if(clientX < minLeft) clientX = minLeft; // 防止被遮掩
+        // if(clientX > maxRight) clientX = maxRight; 
         datelabel.setStyle('left', clientX + 'px');
         datelabel.setStyle('visibility', 'visible');
       }
@@ -200,9 +200,9 @@ class AudioPlayer {
         if(!this.config.isFastForward) return;
         event.preventDefault();
         // 这里处理移动端进度条焦点变化
-        if(!isPc) { 
-          progressHover(true);
-        } 
+        // if(!isPc) { 
+        //   progressHover(true);
+        // } 
         const maxWidth = this.getProgressWidth();
         // 如果这个元素的位置内只有一个手指
         if (isPc || event.targetTouches.length === 1) {
@@ -239,7 +239,7 @@ class AudioPlayer {
             this.setPlayTime(currentTime);
             this.isMove = false;
             if(!isPc) { // 这里处理移动端进度条变化
-              progressHover(false);
+              // progressHover(false);
               hidemoveLabel();
             } 
             dotElmt.removeEventListener(touchmove, move);
@@ -260,10 +260,10 @@ class AudioPlayer {
 
         ///进度条控制样式 mouseover mouseout：鼠标移入子元素时会重复触发所以使用mouseenter mouseleave
         // PC端鼠标移入控制条变粗变大
-        $('#progress').on('mouseenter', (e) => progressHover(true));
+        // $('#progress').on('mouseenter', (e) => progressHover(true));
         // 鼠标移开
         $('#progress').on('mouseleave', (e) => {
-            progressHover(false);
+            // progressHover(false);
             hidemoveLabel();
         });
         // 鼠标移动
