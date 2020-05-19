@@ -1,6 +1,7 @@
 import './index.less';
 import WaveSurfer from 'wavesurfer.js';
 import $ from './dom';
+import Utils from './utils';
 
 interface Config {
   /** 音频加载是否自动播放 */
@@ -31,9 +32,9 @@ class AudioPlayer {
 
     constructor() {}
     
-    init(el: string | HTMLElement, config: Config) {
+    init(selector: string | HTMLElement, config: Config) {
       try {
-        const videoContainer = typeof el === 'string' ? document.querySelector(`#${el}`) : el;
+        const videoContainer = typeof selector === 'string' ? document.querySelector(selector) : selector;
         videoContainer.innerHTML = this.videoElement;
 
         const elemelt = videoContainer.querySelector('#_audio_player');
@@ -43,7 +44,12 @@ class AudioPlayer {
             progressColor: '#04bdff',
             backgroundColor: '#fff',
             cursorColor: '#04bdff',
-            barRadius: '10'
+            // barRadius: '10',
+            height: '200',
+            barGap: null,
+            barWidth: 4,
+            barHeight: 1,
+
         });
         this.audioPlayer.load(config.src);
         this.initEvent();
@@ -93,6 +99,7 @@ class AudioPlayer {
     /** 更新当前状态 */
     setState(state: 'error' | 'finish' | 'interaction' | 'loading' | 'mute' | 'pause' | 'play' | 'ready') {
       $('.video_cover').setStyle('display', 'none');
+      console.log(state)
       switch (state) {
         case 'error':
          $('.video_cover').setStyle('display', 'block');
@@ -117,7 +124,7 @@ class AudioPlayer {
 
     /** 获取进度条宽度，存在旋转屏幕导致宽度不一致，实时获取 */
     getProgressWidth() {
-      return $('#progress').eq().clientWidth;
+      return $('#progress').get().clientWidth;
     }
 
     /** 根据当前X位置计算当前时间进度 */
@@ -125,37 +132,27 @@ class AudioPlayer {
       const maxWidth = this.getProgressWidth(); // 进度总长度，进度条-按钮
       if(position > maxWidth) position = maxWidth;
       const slitherCurrentTime = position / maxWidth * this.audioPlayer.getDuration(); // 当前拖动进度位置时间
-      const currentTime = `${this.formatSeconds(slitherCurrentTime)}`; // 当前播放进度- 分:秒
+      const currentTime = `${Utils.formatSeconds(slitherCurrentTime)}`; // 当前播放进度- 分:秒
       return currentTime;
     }
     
     /** 音频当前播放进度/进度条样式 */
     setDuration(position: number) {
       const currentTime = this.getCurrentLocationTime(position);
-      const duration = this.formatSeconds(this.audioPlayer.getDuration()); // 音频总长度- 分:秒
+      const duration = Utils.formatSeconds(this.audioPlayer.getDuration()); // 音频总长度- 分:秒
       $('.time').html(`${currentTime} / ${duration}`);
       $('.current_progress').setStyle('width', `${position}px`);
       $('.current_dot').setStyle('left', `${position}px`);
     }
-    
-    /** 是否是PC端 */
-    isPC() {
-      const userAgentInfo = navigator.userAgent;
-      const Agents = ['Android', 'iPhone', 'SymbianOS', 'Windows Phone', 'iPad', 'iPod'];  // 判断用户代理头信息
-      let flag = true;
-      for (const i in Agents) {
-        if (userAgentInfo.indexOf(Agents[i]) !== -1) { flag = false; break; }
-      }
-      return flag;   // true为pc端，false为非pc端
-    }
+  
     
     /** 各种初始化事件 */
     initEvent() {
-      const isPc = this.isPC();
+      const isPc = Utils.isPC();
       // pc端 和移动端事件区分
       const touchstart = isPc ? 'mousedown' : 'touchstart'; // 鼠标按下/触摸
       const touchmove = isPc ? 'mousemove' : 'touchmove'; // 开始移动/拖动
-      const touchend = isPc ? 'mouseup' : 'touchend'; // 松开/手指移开
+      const touchend = isPc ? 'mouseup' : 'touchend'; // 鼠标松开/手指移开
       
       // 倍速列表点击事件
       $('#speed_con div').on('click', (e) => {
@@ -183,14 +180,11 @@ class AudioPlayer {
         if(clientX < 0) clientX = 0;
         const datelabel = $('.date_label');
         datelabel.text(this.getCurrentLocationTime(clientX));
-        // const minLeft = datelabel.eq().clientWidth / 2;
-        // const maxRight = $('#progress').eq().clientWidth;
-        // if(clientX < minLeft) clientX = minLeft; // 防止被遮掩
-        // if(clientX > maxRight) clientX = maxRight; 
         datelabel.setStyle('left', clientX + 'px');
         datelabel.setStyle('visibility', 'visible');
       }
 
+      // 隐藏label
       const hidemoveLabel = () => {
         $('.date_label').setStyle('visibility', 'hidden');;
       }
@@ -208,7 +202,7 @@ class AudioPlayer {
         if (isPc || event.targetTouches.length === 1) {
           const touch = isPc ? event : event.targetTouches[0];
           // 把元素放在手指所在的位置
-          const disX = touch.clientX - $('.current_dot').eq().offsetLeft;
+          const disX = touch.clientX - $('.current_dot').get().offsetLeft;
           const getPosition = (e) => {
             let l = e.clientX - disX;
             if (l < 0) { l = 0; }
@@ -227,7 +221,7 @@ class AudioPlayer {
           };
     
           // 如果浏览器下，需要全局监听拖动
-          const dotElmt = isPc ? window : $('.current_dot').eq();
+          const dotElmt = isPc ? window : $('.current_dot').get();
           // 拖动完成 删除事件
           const chend = (e) => {
             // 拖动完成更新播放器时间
@@ -238,10 +232,11 @@ class AudioPlayer {
            
             this.setPlayTime(currentTime);
             this.isMove = false;
-            if(!isPc) { // 这里处理移动端进度条变化
-              // progressHover(false);
-              hidemoveLabel();
-            } 
+            // if(!isPc) { // 这里处理移动端进度条变化
+            //   // progressHover(false);
+            //   hidemoveLabel();
+            // } 
+            hidemoveLabel();
             dotElmt.removeEventListener(touchmove, move);
             dotElmt.removeEventListener(touchend, chend);
           };
@@ -253,8 +248,8 @@ class AudioPlayer {
       if (isPc) {
         // PC端点击音量按钮禁音
         $('#volume_img').on('click', (e) => {
-            const val = parseFloat($('#volumeslider').eq().value) > 0 ? 0.0 : this.currentvolum;
-            $('#volumeslider').eq().value = val;
+            const val = parseFloat($('#volumeslider').get().value) > 0 ? 0.0 : this.currentvolum;
+            $('#volumeslider').get().value = val;
             this.setVolum(val);
         })
 
@@ -271,7 +266,6 @@ class AudioPlayer {
           // layerX 鼠标相对于当前焦点元素可视区偏移位置  offsetLeft 当前元素偏移
           showmoveLabel(e.target.tagName === 'I' ? e.target.offsetLeft + e.layerX : e.layerX);
         });
-        $('.current_dot').eq().onmousedown = (event) => event.stopPropagation();
       } else {
         $('#audio_container').on('ontouchstart', onmouseover);
       }
@@ -291,10 +285,10 @@ class AudioPlayer {
 
     
       // 阻止事件冒泡到点击进度条
-      $('.current_dot').eq().onmousedown = (event) => event.stopPropagation();
+      $('.current_dot').onmousedown((event) => event.stopPropagation());
     
-      // 鼠标点击的时候，跳转进度
-      $('#progress').eq().onmousedown = (event) => {
+      // 鼠标按下，跳转进度
+      $('#progress').onmousedown((event) => {
         if(!this.config.isFastForward) return;
         const maxWidth = this.getProgressWidth();
         let layerX = event.layerX;
@@ -304,10 +298,10 @@ class AudioPlayer {
         if(currentTime < 0) currentTime = 0;
         this.setPlayTime(currentTime);
         this.setDuration(layerX);
-      }
+      })
     
       // 音量拖动事件
-      $('#volumeslider').eq().oninput = (e) => {
+      $('#volumeslider').get().oninput = (e) => {
         e.stopPropagation();
         const value = e.target.value;
         this.currentvolum = value;
@@ -347,7 +341,9 @@ class AudioPlayer {
       // error：播放错误
       this.audioPlayer.on('error', (e) => this.setState('error'));
       // 与波形有相互作用时(波形点击跳转进度)
-      this.audioPlayer.on('interaction', (e) => this.setState('interaction'));
+      this.audioPlayer.on('interaction', (e) => {
+        this.setState('interaction');
+      });
       
       // 静音更改。回调将收到（布尔）新的静音状态。
       this.audioPlayer.on('mute', (e) => this.setState('mute'));
@@ -359,42 +355,13 @@ class AudioPlayer {
       // finish：播放结束
       this.audioPlayer.on('finish', (e) => {
         this.setState('finish');
-        $('.play_btn').eq().classList.remove('suspend');
+        $('.play_btn').removeClass('suspend');
       });
-    
- 
-    
     }
 
-    /** 时间秒转换为时分秒 
-     * @param value 秒
-    */
-    formatSeconds(value): string {
-      let secondTime = parseInt(value);// 秒
-      let minuteTime = 0;// 分
-      let hourTime = 0;// 小时
-      if(secondTime >= 60) {
-        minuteTime = Math.floor(secondTime / 60);
-        secondTime = Math.floor(secondTime % 60);
-        if(minuteTime >= 60) {
-            hourTime = Math.floor(minuteTime / 60);
-            minuteTime = Math.floor(minuteTime % 60);
-        }
-      }
-      let joinDate = `${this.PrefixInteger(minuteTime)}:${this.PrefixInteger(secondTime)}`;
-      if(hourTime > 0 || this.audioPlayer.getDuration() >= 3600) joinDate = `${this.PrefixInteger(hourTime)}:${joinDate}`;
-      return joinDate;
-    }
+
     
-    /**
-     * utils 数字向下取整
-     * @param num 数字
-     * @param len 长度
-     */
-    PrefixInteger(num: number, len: number = 2) {
-      num = isNaN(num) ? 0 : Math.floor(num); // 向下取整
-      return (Array(len).join('0') + num).slice(-len);
-    }
+
 
     videoElement = `
         <div class="audio_player showControls" id="audio_container">
@@ -410,15 +377,15 @@ class AudioPlayer {
                 <span class="date_label">00:00</span>
             </div>
             <div class="controls_right">
-                <div class="time"></div>
+                <div class="time">00:00 / 00:00</div>
                 <!-- 音量 -->
                 <div class="volume_bth">
+                    <i id="volume_img" class="button_img sound"></i>
                     <div class="volume_con">
                         <div class="volume_slider">
                             <input id="volumeslider" type='range' min="0" max="1" step="0.01" value="0.8"/>
                         </div>
                     </div>
-                    <i id="volume_img" class="button_img sound"></i>
                 </div>
                 <!-- 倍速 -->
                 <div class="speed_bth">
@@ -458,7 +425,10 @@ class AudioPlayer {
                 </div>
             </div>
         </div>
-        <div id="_audio_player" width="100%"></div>
+        <div class="wavesurfer_container">
+          <div id="_audio_player" width="100%"></div>
+        </div>
+       
     </div>
     `
 }

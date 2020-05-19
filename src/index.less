@@ -4,22 +4,18 @@ body {
     margin: 0;
 }
 .audio_player {
-    width: 50%;
-    margin-top: 100px;
-    margin-left: 25%;
     position: relative;
     text-align: center;
-    border: solid 1px #eee;
     border-radius: 4px;
-  
     .controls {
       height: 80px;
       padding: 0 16px;
-      background-color: rgba(0, 16, 27, 0.7);
+      background-color: #393e49;
       transition: bottom 0.3s;
       display: flex;
       align-items: center;
       z-index: 999;
+      border: solid 1px #eee;
   
       /* 进度条 */
       .progress_bar {
@@ -99,7 +95,7 @@ body {
       .controls_left {
         display: flex;
         align-items: center;
-        margin-right: 14px;
+        margin-right: 20px;
       }
   
       .controls_right {
@@ -171,31 +167,23 @@ body {
         .volume_bth {
           position: relative;
           display: flex;
+          align-items: center;
           .volume_con {
-              position: absolute;
-              display: none;
-              bottom: 0;
-              width: 34px;
-              height: 112px;
-              left: -8px;
+              display: block;
               .volume_slider {
-                  position: absolute;
                   text-align: center;
                   border-radius: 10px;
                   padding: 14px 14px;
-                  background-color: rgba(0, 0, 0, 0.5);
-                  right: -46px;
-                  top: 0;
-                  transform: rotate(-90deg);
+                  // background-color: rgba(0, 0, 0, 0.5);
               }
           }
         }
   
-        .volume_bth:hover {
-          .volume_con {
-            display: block;
-          }
-        }
+        // .volume_bth:hover {
+        //   .volume_con {
+        //     display: block;
+        //   }
+        // }
       }
 
       // 播放按钮图片
@@ -244,7 +232,7 @@ body {
         width: 100%;
         top: 0;
         left: 0;
-        background-color: rgba(0, 0, 0, 0.4);
+        background-color: rgba(0, 0, 0, 0.3);
         z-index: 999;
         .cover_content {
           width: 100%;
@@ -322,6 +310,10 @@ body {
               }
             }
         }
+    }
+
+    .wavesurfer_container {
+      border: solid 1px #eee;
     }
   }
   

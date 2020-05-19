@@ -1,83 +1,44 @@
-// export default function() {
-
-// }
-
-
 class Utils {
-    
-    el: Element;
-    constructor(private elemt) {
-        this.el = elemt;
-        return this;
-    }
-
-    /**
-     * 判断class是否存在
-     * @param obj dom对象
-     * @param cls class名称
-     */
-    hasClass(cls: string) {  
-        return this.el.className.match(new RegExp('(\\s|^)' + cls + '(\\s|$)'));  
-    }
-
-
-    /**
-     * 添加class
-     * @param obj dom对象
-     * @param cls class
-     */
-    addClass(cls: string) {  
-        if (!this.hasClass(cls)) this.el.className += " " + cls;  
-    } 
-
-    /**
-     * 删除class
-     * @param obj dom对象
-     * @param cls class
-     */
-    removeClass(cls: string) {  
-        if (this.hasClass(cls)) {  
-            var reg = new RegExp('(\\s|^)' + cls + '(\\s|$)');  
-            this.el.className =this.el.className.replace(reg, ' ');  
+    /** 是否是PC端 */
+    static isPC() {
+        const userAgentInfo = navigator.userAgent;
+        const Agents = ['Android', 'iPhone', 'SymbianOS', 'Windows Phone', 'iPad', 'iPod'];  // 判断用户代理头信息
+        let flag = true;
+        for (const i in Agents) {
+            if (userAgentInfo.indexOf(Agents[i]) !== -1) { flag = false; break; }
         }
+        return flag;   // true为pc端，false为非pc端
     }
 
     /**
-     * 切换class 有则删除，无则添加
-     * @param obj dom对象
-     * @param cls class
+     * utils 数字向下取整
+     * @param num 数字
+     * @param len 长度
      */
-    toggleClass(cls: string) {
-        if (this.hasClass(cls)) {
-            this.removeClass(cls);
-        } else {
-            this.addClass(cls);
-        }
+    static prefixInteger(num: number, len: number = 2) {
+        num = isNaN(num) ? 0 : Math.floor(num); // 向下取整
+        return (Array(len).join('0') + num).slice(-len);
     }
 
-    /**
-     * 创建dom元素
-     * @param tag 标签 例如div
-     */
-    createElemt(tag: string) {  
-        return document.createElement(tag);
+   /** 时间秒转换为时分秒 
+    * @param value 秒
+    */
+   static formatSeconds(value: any): string {
+    let secondTime = parseInt(value);// 秒
+    let minuteTime = 0;// 分
+    let hourTime = 0;// 小时
+    if(secondTime >= 60) {
+      minuteTime = Math.floor(secondTime / 60);
+      secondTime = Math.floor(secondTime % 60);
+      if(minuteTime >= 60) {
+          hourTime = Math.floor(minuteTime / 60);
+          minuteTime = Math.floor(minuteTime % 60);
+      }
     }
-
-    /**
-     * 设置属性
-     */
-    setAttr(key: string,value: string) {  
-        this.el.setAttribute(key,value);
-        return this;
-    }
-
-    /**
-     * 监听事件
-     */
-    on(event: string, fun: (e) => void) {
-        this.el.addEventListener(event, fun, false);
-        return this;
-    }
+    let joinDate = `${Utils.prefixInteger(minuteTime)}:${Utils.prefixInteger(secondTime)}`;
+    if(hourTime > 0 || value >= 3600) joinDate = `${Utils.prefixInteger(hourTime)}:${joinDate}`;
+    return joinDate;
+  }
 }
 
 export default Utils;

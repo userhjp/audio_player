@@ -10,7 +10,7 @@
 <body>
   <link rel="stylesheet" href="../dist/audio.css" type="text/css" />
 
-  <div id="waveform"></div>
+  <div id="audio_player"></div>
  <!-- <audio src="./assets/王建房 - 在人间.mp3" controls="controls" loop="loop" autoplay="autoplay">您的浏览器不支持html5的audio标签</audio> -->
  <!-- <div id="button">
      <a href="#" onclick="changeurl('one')">葫芦娃.mp4</a><br>
@@ -31,7 +31,7 @@
         })
     }
     window.onload = function () {
-        myVideo.init('waveform', {
+        myVideo.init('#audio_player', {
             src: obj['one'].url,
             poster: obj['one'].poster,
             autoplay: true

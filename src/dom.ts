@@ -29,9 +29,9 @@ class Dom {
     }
 
     /**
-     * 查询子元素
+     * 获取dom元素
      */
-    eq(index: number = 0) {
+    get(index: number = 0) {
         return this.nodes[index];
     }
 
@@ -138,8 +138,17 @@ class Dom {
     on(event: string, fun: (e) => void) {
         this.each((el => {
             el.addEventListener(event, fun, false);
-        }))
+        }));
         return this;
+    }
+
+    /**
+     * 监听鼠标按下事件
+     */
+    onmousedown(callback: (ev: MouseEvent | any) => any) {
+        this.each((el => {
+            el.onmousedown = callback;
+        }));
     }
 }
 
