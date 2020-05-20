@@ -133,6 +133,26 @@ class Dom {
     }
 
     /**
+     * 显示
+     */
+    show() {
+        this.each(((el: any) => {
+            el.style['display'] = 'block';
+        }))
+        return this;
+    }
+
+    /**
+     * 隐藏
+     */
+    hide() {
+        this.each(((el: any) => {
+            el.style['display'] = 'none';
+        }))
+        return this;
+    }
+
+    /**
      * 监听事件
      */
     on(event: string, fun: (e) => void) {

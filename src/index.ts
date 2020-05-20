@@ -58,21 +58,28 @@ class AudioPlayer {
       }
     }
 
+    destroy = () => {
+      this.audioPlayer.destroy();
+      this.audioPlayer.unAll();
+    }
 
     // /** 重新加载音频 */
     // reload = () => this.playerElement.load();
     
     /** 开始、暂停播放 */
-    play(time?: number) {
+    play() {
       this.audioPlayer.playPause()
     }
 
     /**
      * 设置播放进度
-     * @param time
+     * @param time 从当前位置跳过多少秒
      */
     setPlayTime(time: number) {
-      this.audioPlayer.play(time);
+      // 当前播放时间
+      const lasttime = this.audioPlayer.getCurrentTime();
+      // this.audioPlayer.play(time, this.audioPlayer.isPlaying() ? null : time);
+      this.audioPlayer.skip(time-lasttime)
     }
     
     /** 设置倍速 */
@@ -98,11 +105,11 @@ class AudioPlayer {
     
     /** 更新当前状态 */
     setState(state: 'error' | 'finish' | 'interaction' | 'loading' | 'mute' | 'pause' | 'play' | 'ready') {
-      $('.video_cover').setStyle('display', 'none');
+      $('.video_cover').hide();
       console.log(state)
       switch (state) {
         case 'error':
-         $('.video_cover').setStyle('display', 'block');
+         $('#v_error').show();
           break;
         case 'play':
           $('.play_btn').addClass('suspend');
@@ -227,9 +234,8 @@ class AudioPlayer {
             // 拖动完成更新播放器时间
             const touch2 = isPc ? e : e.changedTouches[0];
             const position = getPosition(touch2);
-            // 更新音频实际播放时间
+            // 实际播放时间
             const currentTime = position / maxWidth * this.audioPlayer.getDuration();
-           
             this.setPlayTime(currentTime);
             this.isMove = false;
             // if(!isPc) { // 这里处理移动端进度条变化
@@ -392,7 +398,6 @@ class AudioPlayer {
                     <div id="speed_con" class="speed_li">
                         <div>2.0x</div>
                         <div>1.5x</div>
-                        <div>1.2x</div>
                         <div class="on">1.0x</div>
                         <div>0.5x</div>
                     </div>
