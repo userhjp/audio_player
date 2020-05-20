@@ -8,21 +8,14 @@ interface Config {
   autoplay?: boolean;
   /** 播放地址 */
   src?: string;
-  /** 封面 */
-  poster?: string;
-  /** 是否自动隐藏控制栏 */
-  autoHideControls?: boolean;
   /** 是否允许点击、拖动进度条跳转进度 */
   isFastForward?: boolean; 
-  /** 是否隐藏全屏按钮 */
-  hideFullScreen?: boolean; 
 };
 
 class AudioPlayer {
    private audioPlayer: any; // 播放器
    private config: Config = {
       autoplay: false, // 音频加载是否自动播放
-      autoHideControls: true, // 自动隐藏控制条
       isFastForward: true, // 是否允许快进
     }
     private isMove = false; // 进度条是否拖动中，防止拖动时候音频正常播放更新进度条
@@ -36,6 +29,10 @@ class AudioPlayer {
       try {
         const videoContainer = typeof selector === 'string' ? document.querySelector(selector) : selector;
         videoContainer.innerHTML = this.videoElement;
+        if(Utils.isIE()) {
+          videoContainer.innerHTML = `<audio src="${config.src}" controls="controls">您的浏览器不支持html5的audio标签</audio>`
+          return;
+        }
 
         const elemelt = videoContainer.querySelector('#_audio_player');
         this.audioPlayer = WaveSurfer.create({
@@ -142,8 +139,11 @@ class AudioPlayer {
       const currentTime = `${Utils.formatSeconds(slitherCurrentTime)}`; // 当前播放进度- 分:秒
       return currentTime;
     }
-    
-    /** 音频当前播放进度/进度条样式 */
+
+    /** 
+     * 音频当前播放进度/进度条样式 
+     * @param position 当前进度条位置
+    */
     setDuration(position: number) {
       const currentTime = this.getCurrentLocationTime(position);
       const duration = Utils.formatSeconds(this.audioPlayer.getDuration()); // 音频总长度- 分:秒
@@ -325,8 +325,8 @@ class AudioPlayer {
     
       // ready：可播放监听。当浏览器能够开始播放指定的音频/音频时触发
       this.audioPlayer.on('ready', (e) => {
-        const maxWidth = this.getProgressWidth();
-        this.setDuration(this.audioPlayer.getCurrentTime()/ this.audioPlayer.getDuration() * maxWidth);
+        // 当前进度秒/总长度
+        this.setDuration(this.audioPlayer.getCurrentTime()/ this.audioPlayer.getDuration() * this.getProgressWidth());
         this.setState('ready');
       })
       
@@ -349,6 +349,10 @@ class AudioPlayer {
       // 与波形有相互作用时(波形点击跳转进度)
       this.audioPlayer.on('interaction', (e) => {
         this.setState('interaction');
+        setTimeout(() => {
+          this.setDuration(this.audioPlayer.getCurrentTime()/ this.audioPlayer.getDuration() * this.getProgressWidth());
+        }, 0);
+       
       });
       
       // 静音更改。回调将收到（布尔）新的静音状态。

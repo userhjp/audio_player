@@ -18,23 +18,23 @@
  </div> -->
 <script type="text/javascript" src="../dist/audio.bundle.js"></script><script type="text/javascript" src="/dist/audio.bundle.js"></script></body>
 <script type="text/javascript">
-    var myVideo = new AudioPlayer();
+    var myAudio = new AudioPlayer();
     var obj = {
         one: {
             url: './assets/王建房 - 在人间.mp3',
         },
     }
     function changeurl(type) {
-        myVideo.setUrl({
+        myAudio.setUrl({
             src: obj[type].url,
             poster: obj[type].poster,
         })
     }
     window.onload = function () {
-        myVideo.init('#audio_player', {
+        myAudio.init('#audio_player', {
             src: obj['one'].url,
             poster: obj['one'].poster,
-            autoplay: true
+            autoplay: false
         });
     }
 

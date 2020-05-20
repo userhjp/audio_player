@@ -39,6 +39,13 @@ class Utils {
     if(hourTime > 0 || value >= 3600) joinDate = `${Utils.prefixInteger(hourTime)}:${joinDate}`;
     return joinDate;
   }
+
+  static isIE() {
+    if (!!window.ActiveXObject || "ActiveXObject" in window)
+    return true;
+    else
+    return false;
+  }
 }
 
 export default Utils;
