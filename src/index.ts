@@ -20,32 +20,34 @@ class AudioPlayer {
     }
     private isMove = false; // 进度条是否拖动中，防止拖动时候音频正常播放更新进度条
     private currentvolum = 1; // 当前音频播放音量 0 - 1
-
+    videoContainer;
     // 开始加载 | 加载完成 | 播放中 | 暂停中 | 缓冲中 | 缓冲就绪 | 播放完毕 | 错误
 
     constructor() {}
     
     init(selector: string | HTMLElement, config: Config) {
       try {
-        const videoContainer = typeof selector === 'string' ? document.querySelector(selector) : selector;
-        videoContainer.innerHTML = this.videoElement;
+        this.videoContainer = typeof selector === 'string' ? document.querySelector(selector) : selector;
+        this.videoContainer.innerHTML = this.videoElement;
+        this.videoContainer.oncontextmenu = () => false;
         if(Utils.isIE()) {
-          videoContainer.innerHTML = `<audio src="${config.src}" controls="controls">您的浏览器不支持html5的audio标签</audio>`
+          this.videoContainer.innerHTML = `<audio src="${config.src}" controlsList="nodownload noremoteplayback" controls="controls">您的浏览器不支持html5的audio标签</audio>`;
+          document.querySelector('audio').oncontextmenu = () => false;
           return;
         }
 
-        const elemelt = videoContainer.querySelector('#_audio_player');
+        const elemelt = this.videoContainer.querySelector('#_audio_player');
         this.audioPlayer = WaveSurfer.create({
             container: elemelt,
             waveColor: '#d7d7d7',
             progressColor: '#04bdff',
             backgroundColor: '#fff',
             cursorColor: '#04bdff',
-            // barRadius: '10',
+            barRadius: '4',
             height: '200',
-            barGap: null,
-            barWidth: 4,
-            barHeight: 1,
+            // barGap: null,
+            // barWidth: 4,
+            // barHeight: 1,
 
         });
         this.audioPlayer.load(config.src);
@@ -68,6 +70,15 @@ class AudioPlayer {
       this.audioPlayer.playPause()
     }
 
+    /** 暂停播放 */
+    pause = () =>this.audioPlayer.pause();
+
+    /** 停止并开始？ */
+    stop = () => this.audioPlayer.stop();
+
+    /** 是否播放中 */
+    isPlaying = () => this.audioPlayer.isPlaying()
+
     /**
      * 设置播放进度
      * @param time 从当前位置跳过多少秒
@@ -75,13 +86,12 @@ class AudioPlayer {
     setPlayTime(time: number) {
       // 当前播放时间
       const lasttime = this.audioPlayer.getCurrentTime();
-      // this.audioPlayer.play(time, this.audioPlayer.isPlaying() ? null : time);
       this.audioPlayer.skip(time-lasttime)
     }
     
     /** 设置倍速 */
     setPlaybackRate(e: string) {
-      $('#speed_btn').text(e);
+      $('#speed_btn').text(parseFloat(e).toFixed(1) + 'x');
       this.audioPlayer.setPlaybackRate(e)
     }
     
@@ -164,7 +174,7 @@ class AudioPlayer {
       // 倍速列表点击事件
       $('#speed_con div').on('click', (e) => {
         $('#speed_con div').removeClass('on');
-        $(e.target).addClass('on');
+        e.target.classList.add('on');
         const val = `${parseFloat(e.target.innerText)}`;
         this.setPlaybackRate(val);
       })
@@ -172,15 +182,7 @@ class AudioPlayer {
       // 播放按钮点击
       $('.play_btn').on('click', (e) => this.play());
 
-      // 进度条变粗大 这里区分了移动端和pc端事件
-      // const progressHover = (isHover: boolean) => {
-      //   if(!this.config.isFastForward) return;
-      //   if(isHover) {
-      //       $('#progress').addClass('hover_cls');
-      //   } else {
-      //       $('#progress').removeClass('hover_cls');
-      //   }
-      // }
+      $('.stop_btn').on('click', (e) => this.stop());
 
       // 改变时间label位置
       const showmoveLabel = (clientX) => {
@@ -200,10 +202,6 @@ class AudioPlayer {
       $('.current_dot').on(touchstart, (event) => {
         if(!this.config.isFastForward) return;
         event.preventDefault();
-        // 这里处理移动端进度条焦点变化
-        // if(!isPc) { 
-        //   progressHover(true);
-        // } 
         const maxWidth = this.getProgressWidth();
         // 如果这个元素的位置内只有一个手指
         if (isPc || event.targetTouches.length === 1) {
@@ -238,10 +236,6 @@ class AudioPlayer {
             const currentTime = position / maxWidth * this.audioPlayer.getDuration();
             this.setPlayTime(currentTime);
             this.isMove = false;
-            // if(!isPc) { // 这里处理移动端进度条变化
-            //   // progressHover(false);
-            //   hidemoveLabel();
-            // } 
             hidemoveLabel();
             dotElmt.removeEventListener(touchmove, move);
             dotElmt.removeEventListener(touchend, chend);
@@ -259,9 +253,6 @@ class AudioPlayer {
             this.setVolum(val);
         })
 
-        ///进度条控制样式 mouseover mouseout：鼠标移入子元素时会重复触发所以使用mouseenter mouseleave
-        // PC端鼠标移入控制条变粗变大
-        // $('#progress').on('mouseenter', (e) => progressHover(true));
         // 鼠标移开
         $('#progress').on('mouseleave', (e) => {
             // progressHover(false);
@@ -277,17 +268,11 @@ class AudioPlayer {
       }
 
       // 右键
-      $('#audio_container').on('oncontextmenu', (e) => {
-        //鼠标点的坐标
-        const oX = e.layerX;
-        const oY = e.layerY;
-        //菜单出现后的位置
-        // menu.style.display = "block";
-        // menu.style.left = oX + "px";
-        // menu.style.top = oY + "px";
-        //阻止浏览器默认事件
-        return false;//一般点击右键会出现浏览器默认的右键菜单，写了这句代码就可以阻止该默认事件。
-      });
+      // const containerElemelt = container.querySelector('#video_container');;
+      // $('#audio_container').on('oncontextmenu', (e) => {
+      //   //阻止浏览器默认右键事件
+      //   return false;
+      // });
 
     
       // 阻止事件冒泡到点击进度条
@@ -357,7 +342,6 @@ class AudioPlayer {
       
       // 静音更改。回调将收到（布尔）新的静音状态。
       this.audioPlayer.on('mute', (e) => this.setState('mute'));
-      
     
       // 使用抓取或拖放加载时连续触发。回调将以百分比[0..100]接收（整数）加载进度。
       this.audioPlayer.on('loading', (e) => this.setState('loading'));
@@ -369,16 +353,12 @@ class AudioPlayer {
       });
     }
 
-
-    
-
-
     videoElement = `
         <div class="audio_player showControls" id="audio_container">
-        
         <div class="controls" id="audio_controls">
             <div class="controls_left">
-                <i class="button_img play play_btn"></i>
+                <i class="button_img play play_btn" title="播放/暂停"></i>
+                <i class="button_img stop stop_btn" title="停止播放"></i>
             </div>
             <div id="progress" class="progress_bar">
                 <div class="current_progress"></div>
