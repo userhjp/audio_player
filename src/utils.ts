@@ -41,7 +41,7 @@ class Utils {
   }
 
   static isIE() {
-    if (!!window.ActiveXObject || "ActiveXObject" in window)
+    if (!!window.ActiveXObject || "ActiveXObject" in window || navigator.userAgent.indexOf("Edge") > -1)
     return true;
     else
     return false;

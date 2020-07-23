@@ -36,7 +36,7 @@ class AudioPlayer {
           return;
         }
 
-        const elemelt = this.videoContainer.querySelector('#_audio_player');
+        const elemelt = this.videoContainer.querySelector('#audio_player');
         this.audioPlayer = WaveSurfer.create({
             container: elemelt,
             waveColor: '#d7d7d7',
@@ -58,8 +58,10 @@ class AudioPlayer {
     }
 
     destroy = () => {
-      this.audioPlayer.destroy();
-      this.audioPlayer.unAll();
+      if(this.audioPlayer) {
+        this.audioPlayer.destroy();
+        this.audioPlayer.unAll();
+      }
     }
 
     // /** 重新加载音频 */
@@ -67,17 +69,24 @@ class AudioPlayer {
     
     /** 开始、暂停播放 */
     play() {
-      this.audioPlayer.playPause()
+      this.audioPlayer && this.audioPlayer.playPause()
     }
 
     /** 暂停播放 */
-    pause = () =>this.audioPlayer.pause();
+    pause = () => {
+      if(this.audioPlayer) {
+        this.audioPlayer.pause();
+      } else {
+        const audioEl = document.querySelector('audio');
+        audioEl && audioEl.pause();
+      }
+    } 
 
     /** 停止并开始？ */
-    stop = () => this.audioPlayer.stop();
+    stop = () => this.audioPlayer && this.audioPlayer.stop();
 
     /** 是否播放中 */
-    isPlaying = () => this.audioPlayer.isPlaying()
+    isPlaying = () => this.audioPlayer && this.audioPlayer.isPlaying()
 
     /**
      * 设置播放进度
@@ -354,7 +363,7 @@ class AudioPlayer {
     }
 
     videoElement = `
-        <div class="audio_player showControls" id="audio_container">
+      <div class="audio_player showControls" id="audio_container">
         <div class="controls" id="audio_controls">
             <div class="controls_left">
                 <i class="button_img play play_btn" title="播放/暂停"></i>
@@ -415,9 +424,8 @@ class AudioPlayer {
             </div>
         </div>
         <div class="wavesurfer_container">
-          <div id="_audio_player" width="100%"></div>
+          <div id="audio_player" width="100%"></div>
         </div>
-       
     </div>
     `
 }
